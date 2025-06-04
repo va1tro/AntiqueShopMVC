@@ -1,0 +1,249 @@
+﻿@model AntiqueShopMVC.Models.User
+@{
+    ViewBag.Title = "Личные данные";
+    Layout = null; // Или _Layout, если используется
+}
+
+@functions {
+    public string GetImagePath(string fileName)
+    {
+        return string.IsNullOrWhiteSpace(fileName)
+            ? "/images/picture.jpg"
+            : $"/images/{fileName}";
+    }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert success">@TempData["Success"]</div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert info">@TempData["Info"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+
+<style>
+    @@keyframes fadeOut {
+        0% {
+            opacity: 1;
+        }
+
+        80% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+            display: none;
+        }
+    }
+
+    .alert {
+        max-width: 800px;
+        margin: 10px auto;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        animation: fadeOut 3s forwards;
+    }
+
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.info {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+    body {
+        background-color: #EEE0CB;
+        font-family: Arial, sans-serif;
+    }
+
+    .user-info-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border: 1px solid #A58B5F;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-info-title {
+        text-align: center;
+        color: #8B5E3C;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #8B5E3C;
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #8B5E3C;
+        border-radius: 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #8B5E3C;
+            box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.2);
+        }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #8B5E3C;
+        color: white;
+        border: 1px solid #8B5E3C;
+    }
+
+        .btn-primary:hover {
+            background-color: #7a5234;
+        }
+
+    .btn-secondary {
+        background-color: white;
+        color: #8B5E3C;
+        border: 1px solid #8B5E3C;
+    }
+
+        .btn-secondary:hover {
+            background-color: #EEE0CB;
+        }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 14px;
+    }
+
+    .password-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #EEE0CB;
+    }
+
+    .password-title {
+        color: #8B5E3C;
+        margin-bottom: 15px;
+        font-size: 18px;
+    }
+</style>
+
+<div class="user-info-container">
+    <h2 class="user-info-title">Личные данные</h2>
+
+    <form asp-action="UserInfo" method="post">
+        <input type="hidden" asp-for="IdUser" />
+        <input type="hidden" asp-for="Login" />
+        <input type="hidden" asp-for="IdRole" />
+
+        <div class="form-group">
+            <label class="form-label">Фамилия</label>
+            <input asp-for="LastName" class="form-control" placeholder="Введите фамилию" />
+            <span asp-validation-for="LastName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Имя</label>
+            <input asp-for="FirstName" class="form-control" placeholder="Введите имя" />
+            <span asp-validation-for="FirstName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Отчество</label>
+            <input asp-for="MiddleName" class="form-control" placeholder="Введите отчество" />
+            <span asp-validation-for="MiddleName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Email</label>
+            <input asp-for="Email" class="form-control" placeholder="Введите email" />
+            <span asp-validation-for="Email" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Предпочтения</label>
+            <input asp-for="Preferences" class="form-control" placeholder="Ваши предпочтения" />
+            <span asp-validation-for="Preferences" class="text-danger"></span>
+        </div>
+
+        <div class="password-section">
+            <h3 class="password-title">Смена пароля</h3>
+
+            <div class="form-group">
+                <label class="form-label">Старый пароль</label>
+                <input type="password" name="oldPassword" class="form-control" placeholder="Введите старый пароль" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Новый пароль</label>
+                <input type="password" name="newPassword" class="form-control" placeholder="Введите новый пароль" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Подтвердите пароль</label>
+                <input type="password" name="confirmPassword" class="form-control" placeholder="Подтвердите новый пароль" />
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="/User/Index" class="btn btn-secondary">Назад</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // JavaScript для placeholder-эффекта
+        document.querySelectorAll('.form-control').forEach(input => {
+            const placeholder = input.getAttribute('placeholder');
+
+            input.addEventListener('focus', () => {
+                if (input.value === '' && placeholder) {
+                    input.setAttribute('placeholder', '');
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                if (input.value === '' && placeholder) {
+                    input.setAttribute('placeholder', placeholder);
+                }
+            });
+        });
+    </script>
+}

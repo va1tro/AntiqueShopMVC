@@ -20,3 +20,19 @@ html {
 body {
   margin-bottom: 60px;
 }
+/* Стили для формы */
+.form-control {
+    height: 35px;
+    padding: 0 10px;
+    border: 1px solid #8B5E3C;
+}
+
+    .form-control:focus {
+        border-color: #8B5E3C;
+        box-shadow: 0 0 0 0.25rem rgba(139, 94, 60, 0.25);
+    }
+
+.card {
+    background-color: white;
+    padding: 30px;
+}

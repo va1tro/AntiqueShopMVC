@@ -1,0 +1,115 @@
+﻿@model List<AntiqueShopMVC.Models.Favorite>
+@{
+    ViewBag.Title = "Избранное";
+    Layout = null;
+    int count = ViewBag.Count ?? 0;
+}
+
+<style>
+    body {
+        background: #EEE0CB;
+        font-family: Arial;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        border: 2px solid #8B5E3C;
+    }
+
+    .header {
+        font-size: 24px;
+        font-weight: bold;
+        color: #8B5E3C;
+        margin-bottom: 10px;
+    }
+
+    .counter {
+        color: gray;
+        margin-bottom: 20px;
+    }
+
+    .item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        background: #FFF8F2E6;
+        border-radius: 10px;
+        border: 1px solid #8B5E3C;
+    }
+
+        .item img {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 20px;
+        }
+
+        .item .info {
+            flex-grow: 1;
+        }
+
+            .item .info div {
+                margin-bottom: 5px;
+            }
+
+        .item form {
+            margin-left: 10px;
+        }
+
+    .btn-remove {
+        background: transparent;
+        border: 1px solid #8B5E3C;
+        color: #8B5E3C;
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .btn-back {
+        margin-top: 20px;
+        background: #8B5E3C;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 10px;
+        border: none;
+    }
+</style>
+
+<div class="container">
+    <div class="header">Избранные товары</div>
+    <div class="counter">
+        @if (count > 0)
+        {
+            <span>Найдено избранных товаров: @count</span>
+        }
+        else
+        {
+            <span>Избранные товары не найдены</span>
+        }
+    </div>
+
+    @foreach (var fav in Model)
+    {
+        var item = fav.IdItemNavigation;
+        <div class="item">
+            <img src="@("/images/" + (item.Image ?? "picture.jpg"))" alt="Фото" />
+            <div class="info">
+                <div><strong>@item.NameItem</strong></div>
+                <div>Год: @item.Year</div>
+                <div>Цена: @item.SellingPrice руб.</div>
+            </div>
+            <form asp-action="Remove" method="post">
+                <input type="hidden" name="id" value="@item.IdItem" />
+                <button class="btn-remove" type="submit">Удалить</button>
+            </form>
+        </div>
+    }
+
+    <a class="btn-back" href="/User/Index">← Назад</a>
+</div>

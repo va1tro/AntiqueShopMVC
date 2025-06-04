@@ -1,0 +1,311 @@
+﻿@model AntiqueShopMVC.Models.Item
+@{
+    ViewBag.Title = Model.IdItem == 0 ? "Добавление товара" : "Редактирование товара";
+    Layout = null;
+}
+
+@functions {
+    public string GetImagePath(string fileName)
+    {
+        return string.IsNullOrWhiteSpace(fileName)
+            ? "/images/picture.jpg"
+            : $"/images/{fileName}";
+    }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert success">@TempData["Success"]</div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert info">@TempData["Info"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+
+<style>
+    @@keyframes fadeOut {
+        0% {
+            opacity: 1;
+        }
+
+        80% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+            display: none;
+        }
+    }
+
+    .alert {
+        max-width: 800px;
+        margin: 10px auto;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        animation: fadeOut 3s forwards;
+    }
+
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.info {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+    body {
+        background-color: #EEE0CB;
+        font-family: Arial, sans-serif;
+    }
+
+    .item-form-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border: 1px solid #A58B5F;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .item-form-title {
+        text-align: center;
+        color: #8B5E3C;
+        margin-bottom: 20px;
+        font-size: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 5px;
+        color: #8B5E3C;
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #8B5E3C;
+        border-radius: 8px;
+        font-size: 16px;
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #8B5E3C;
+            box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.2);
+        }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-primary {
+        background-color: #8B5E3C;
+        color: white;
+        border: 1px solid #8B5E3C;
+    }
+
+        .btn-primary:hover {
+            background-color: #7a5234;
+        }
+
+    .btn-secondary {
+        background-color: white;
+        color: #8B5E3C;
+        border: 1px solid #8B5E3C;
+    }
+
+        .btn-secondary:hover {
+            background-color: #EEE0CB;
+        }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 14px;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+    }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+    .image-preview {
+        max-width: 200px;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 5px;
+        border: 1px solid #A58B5F;
+    }
+
+    .select-dropdown {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #8B5E3C;
+        border-radius: 8px;
+        font-size: 16px;
+        background-color: white;
+        color: #333;
+    }
+
+        .select-dropdown:focus {
+            outline: none;
+            border-color: #8B5E3C;
+            box-shadow: 0 0 0 2px rgba(139, 94, 60, 0.2);
+        }
+</style>
+
+<div class="item-form-container">
+    <h2 class="item-form-title">@ViewBag.Title</h2>
+
+    <form asp-action="AddEditItem" method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="IdItem" />
+
+        <div class="form-group">
+            <label class="form-label">Название товара</label>
+            <input asp-for="NameItem" class="form-control" placeholder="Введите название товара" />
+            <span asp-validation-for="NameItem" class="text-danger"></span>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Год выпуска</label>
+                <input asp-for="Year" class="form-control" placeholder="Введите год выпуска" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Дата поступления</label>
+                <input asp-for="ArrivalDate" type="date" class="form-control" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Состояние</label>
+                <input asp-for="Condition" class="form-control" placeholder="Опишите состояние" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Подлинность</label>
+                <input asp-for="Authenticity" class="form-control" placeholder="Укажите подлинность" />
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Цена покупки</label>
+                <input asp-for="PurchasePrice" class="form-control" placeholder="Введите цену покупки" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Цена продажи</label>
+                <input asp-for="SellingPrice" class="form-control" placeholder="Введите цену продажи" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Изображение</label>
+            <input type="file" name="imageFile" class="form-control" />
+            @if (!string.IsNullOrEmpty(Model.Image))
+            {
+                <img src="@GetImagePath(Model.Image)" class="image-preview" alt="Текущее изображение" />
+                <input type="hidden" asp-for="Image" />
+            }
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Категория</label>
+                <select asp-for="IdCategory" asp-items="ViewBag.Categories" class="select-dropdown">
+                    <option value="">-- Выберите категорию --</option>
+                </select>
+                <span asp-validation-for="IdCategory" class="text-danger"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Материал</label>
+                <select asp-for="IdMaterial" asp-items="ViewBag.Materials" class="select-dropdown">
+                    <option value="">-- Выберите материал --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label">Поставщик</label>
+                <select asp-for="IdSupplier" asp-items="ViewBag.Suppliers" class="select-dropdown">
+                    <option value="">-- Выберите поставщика --</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Статус</label>
+                <select asp-for="IdStatus" asp-items="ViewBag.Statuses" class="select-dropdown">
+                    <option value="">-- Выберите статус --</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Страна происхождения</label>
+            <select asp-for="IdOriginCountry" asp-items="ViewBag.OriginCountries" class="select-dropdown">
+                <option value="">-- Выберите страну --</option>
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <a href="/Admin/Index" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        // JavaScript для placeholder-эффекта
+        document.querySelectorAll('.form-control').forEach(input => {
+            const placeholder = input.getAttribute('placeholder');
+
+            input.addEventListener('focus', () => {
+                if (input.value === '' && placeholder) {
+                    input.setAttribute('placeholder', '');
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                if (input.value === '' && placeholder) {
+                    input.setAttribute('placeholder', placeholder);
+                }
+            });
+        });
+    </script>
+}

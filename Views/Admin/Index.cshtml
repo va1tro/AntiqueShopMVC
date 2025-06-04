@@ -8,8 +8,8 @@
 }
 @model List<AntiqueShopMVC.Models.Item>
 @{
-    ViewBag.Title = "Товары";
-    Layout = null; // Или _Layout, если используется
+    ViewBag.Title = "Административная панель";
+    Layout = null;
     var categories = ViewBag.Categories as List<string> ?? new List<string>();
     string currentSearch = ViewBag.CurrentSearch as string ?? "";
     string currentCategory = ViewBag.CurrentCategory as string ?? "Все";
@@ -22,6 +22,14 @@
 @if (TempData["Info"] != null)
 {
     <div class="alert info">@TempData["Info"]</div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert error">@TempData["Error"]</div>
 }
 
 <style>
@@ -39,6 +47,7 @@
             display: none;
         }
     }
+
     .alert {
         max-width: 800px;
         margin: 10px auto;
@@ -59,6 +68,12 @@
             background-color: #fff3cd;
             color: #856404;
             border: 1px solid #ffeeba;
+        }
+
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
     .menu {
@@ -84,6 +99,7 @@
             .menu a:hover {
                 background-color: #e0c4a8;
             }
+
     body {
         background-color: #EEE0CB;
         font-family: Arial, sans-serif;
@@ -110,6 +126,7 @@
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         transition: transform 0.2s;
+        position: relative;
     }
 
         .card:hover {
@@ -174,7 +191,8 @@
     }
 
         .filters select,
-        .filters input[type="text"] {
+        .filters input[type="text"],
+        .filters button {
             padding: 8px;
             border: 1px solid #8B5E3C;
             border-radius: 8px;
@@ -182,13 +200,46 @@
             min-width: 180px;
         }
 
+        .filters button {
+            background-color: #8B5E3C;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+    .admin-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+        .admin-actions button {
+            background: #8B5E3C;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+    .counter {
+        text-align: center;
+        padding: 10px;
+        color: #8B5E3C;
+        font-weight: bold;
+    }
 </style>
 
 <div class="menu">
-    <a href="/Cart/Index">🛒 Корзина</a>
-    <a href="/Favorites/Index">⭐ Избранное</a>
-    <a href="/Sales/Index">📦 Заказы</a>
-    <a href="/User/UserInfo">👤 Личные данные</a>
+    <a href="/Admin/ItemLogs">📝 Все журналы</a>
+    <a href="/Admin/UserInfo">👤 Личные данные</a>
     <a href="/Account/Logout">⛔ Выход</a>
 </div>
 
@@ -212,7 +263,13 @@
     </select>
 
     <input type="text" name="search" placeholder="Поиск..." value="@currentSearch" oninput="delayedSubmit()" />
+    <button type="button" onclick="location.href='/Admin/AddEditItem'" style="text-decoration: none;">Добавить товар</button>
+    <button type="button" onclick="exportToExcel()">Экспорт в Excel</button>
 </form>
+
+<div class="counter">
+    Найдено товаров: @Model.Count
+</div>
 
 <div class="items">
     @if (Model.Count == 0)
@@ -222,41 +279,65 @@
     else
     {
         @foreach (var item in Model)
-{
-    <div class="card" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">
+        {
+            <div class="card">
+                <div class="admin-actions">
+                    <button onclick="event.stopPropagation(); location.href='@Url.Action("AddEditItem", "Admin", new { id = item.IdItem })'">✏️</button>
+                    <button onclick="event.stopPropagation(); deleteItem(@item.IdItem)">🗑️</button>
+                    <button onclick="event.stopPropagation(); location.href='@Url.Action("ItemLogs", "Admin", new { id = item.IdItem })'">📝</button>
+                </div>
 
-        <img src="@GetImagePath(item.Image)" alt="Фото" />
-        <div class="name">@item.NameItem</div>
-        <div class="info">Год: @item.Year</div>
-        <div class="info">Состояние: @item.Condition</div>
-        <div class="info">Подлинность: @item.Authenticity</div>
-        <div class="price">Цена: @item.SellingPrice руб.</div>
-        <div class="actions">
-            <form asp-action="AddToCart" method="post">
-                <input type="hidden" name="id" value="@item.IdItem" />
-                <button type="submit" title="В корзину">🛒</button>
-            </form>
-            <form asp-action="AddToFavorite" method="post">
-                <input type="hidden" name="id" value="@item.IdItem" />
-                <button type="submit" title="В избранное">⭐</button>
-            </form>
-        </div>
-    </div>
-}
-    }
-    @section Scripts {
-        <script>
-            function submitForm() {
-                document.getElementById("filterForm").submit();
-            }
-
-            let timer;
-            function delayedSubmit() {
-                clearTimeout(timer);
-                timer = setTimeout(() => {
-                    submitForm();
-                }, 600); // задержка 600мс после ввода
-            }
-        </script>
+                <img src="@GetImagePath(item.Image)" alt="Фото" onclick="location.href='@Url.Action("Details", "Admin", new { id = item.IdItem })'" />
+                <div class="name" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">@item.NameItem</div>
+                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Год: @item.Year</div>
+                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Состояние: @item.Condition</div>
+                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Подлинность: @item.Authenticity</div>
+                <div class="price" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Цена: @item.SellingPrice руб.</div>
+            </div>
+        }
     }
 </div>
+
+@section Scripts {
+    <script>
+        function submitForm() {
+            document.getElementById("filterForm").submit();
+        }
+
+        let timer;
+        function delayedSubmit() {
+            clearTimeout(timer);
+            timer = setTimeout(() => {
+                submitForm();
+            }, 600);
+        }
+        // Функция удаления
+        function deleteItem(id) {
+            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
+                fetch(`/Admin/DeleteItem/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Ошибка при удалении товара');
+                    }
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('Ошибка при удалении товара');
+                });
+            }
+        }
+
+        // Функция экспорта
+        function exportToExcel() {
+            const params = new URLSearchParams(window.location.search);
+            params.append('export', 'true');
+            window.location.href = `${window.location.pathname}?${params.toString()}`;
+        }
+    </script>
+}

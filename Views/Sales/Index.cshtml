@@ -1,0 +1,158 @@
+﻿@model List<AntiqueShopMVC.Models.Sale>
+@{
+    ViewBag.Title = "Мои заказы";
+    Layout = null; // или null, если не используете общий макет
+}
+
+<style>
+    body {
+        background: #EEE0CB;
+        font-family: Arial;
+    }
+
+    .orders-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        border: 2px solid #8B5E3C;
+    }
+
+    .orders-title {
+        font-size: 24px;
+        font-weight: bold;
+        color: #8B5E3C;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .orders-counter {
+        color: #8B5E3C;
+        margin-bottom: 20px;
+        font-size: 16px;
+    }
+
+    .order-item {
+        border: 1px solid #D6B88D;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        padding: 15px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+        background: #F8F5F0;
+    }
+
+    .order-item img {
+        height: 100px;
+        width: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .order-details {
+        flex-grow: 1;
+    }
+
+    .order-name {
+        font-size: 16px;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+
+    .order-date, 
+    .order-price {
+        font-size: 14px;
+        margin-bottom: 3px;
+        color: #555;
+    }
+
+    .back-button {
+        background: #8B5E3C;
+        color: white;
+        padding: 8px 20px;
+        border: none;
+        border-radius: 5px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 15px;
+    }
+
+    .back-button:hover {
+        background: #6d4a2f;
+    }
+
+    /* Стили для сообщений (аналогичные другим страницам) */
+    .alert {
+        max-width: 800px;
+        margin: 10px auto;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        animation: fadeOut 3s forwards;
+    }
+
+    .alert.success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+    }
+
+    .alert.error {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+    }
+
+    @@keyframes fadeOut {
+        0% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { opacity: 0; display: none; }
+    }
+</style>
+<div class="orders-container">
+    <div class="orders-wrapper">
+        <h1 class="orders-title">Мои заказы</h1>
+        
+        <p class="orders-counter">
+            @if (Model.Any())
+            {
+                <text>Оформленных заказов: @Model.Count</text>
+            }
+            else
+            {
+                <text>У вас нет оформленных заказов</text>
+            }
+        </p>
+        
+        @foreach (var order in Model)
+        {
+            <div class="order-item">
+                @if (order.IdItemNavigation != null)
+                {
+                    <img src="@Url.Content($"~/images/{order.IdItemNavigation.Image ?? "picture.jpg"}")" 
+                         alt="@order.IdItemNavigation.NameItem" class="order-image">
+                    
+                    <div class="order-details">
+                        <div class="order-name">@order.IdItemNavigation.NameItem</div>
+                        <div class="order-date">Дата: @order.SaleDate?.ToString("dd.MM.yyyy")</div>
+                        <div class="order-price">Цена: @order.FinalPrice?.ToString("N2") ₽</div>
+                    </div>
+                }
+                else
+                {
+                    <div class="order-details">
+                        <div class="order-name">Товар недоступен</div>
+                        <div class="order-date">Дата: @order.SaleDate?.ToString("dd.MM.yyyy")</div>
+                        <div class="order-price">Цена: @order.FinalPrice?.ToString("N2") ₽</div>
+                    </div>
+                }
+            </div>
+        }
+        
+        <a href="@Url.Action("Index", "User")" class="back-button">Назад</a>
+    </div>
+</div>

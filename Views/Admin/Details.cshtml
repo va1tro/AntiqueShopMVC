@@ -1,0 +1,67 @@
+﻿@model AntiqueShopMVC.Models.Item
+@{
+    ViewBag.Title = "Подробности";
+    Layout = null;
+}
+
+<style>
+    body {
+        background: #EEE0CB;
+        font-family: Arial;
+    }
+
+    .details-container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        border: 2px solid #8B5E3C;
+    }
+
+    img {
+        width: 100%;
+        max-height: 400px;
+        object-fit: contain;
+        margin-bottom: 20px;
+    }
+
+    .label {
+        font-weight: bold;
+    }
+
+    .back-link {
+        margin-top: 20px;
+        display: inline-block;
+        color: #8B5E3C;
+    }
+</style>
+
+<div class="details-container">
+    <img src="@GetImagePath(Model.Image)" alt="Фото" />
+    <h2>@Model.NameItem</h2>
+
+    <p><span class="label">Год:</span> @Model.Year</p>
+    <p><span class="label">Состояние:</span> @Model.Condition</p>
+    <p><span class="label">Подлинность:</span> @Model.Authenticity</p>
+    <p><span class="label">Цена покупки:</span> @Model.PurchasePrice</p>
+    <p><span class="label">Цена продажи:</span> @Model.SellingPrice</p>
+    <p><span class="label">Дата поступления:</span> @Model.ArrivalDate?.ToShortDateString()</p>
+    <p><span class="label">Категория:</span> @Model.IdCategoryNavigation?.NameCategory</p>
+    <p><span class="label">Материал:</span> @Model.IdMaterialNavigation?.NameMaterial</p>
+    <p><span class="label">Статус:</span> @Model.IdStatusNavigation?.NameStatus</p>
+    <p><span class="label">Страна происхождения:</span> @Model.IdOriginCountryNavigation?.NameCountry</p>
+    <p><span class="label">Поставщик:</span> @Model.IdSupplierNavigation?.NameSupplier</p>
+
+    <a href="/Admin/Index" class="back-link">← Назад к списку</a>
+</div>
+
+@functions {
+    public string GetImagePath(string fileName)
+    {
+        return string.IsNullOrWhiteSpace(fileName)
+            ? "/images/picture.jpg"
+            : "/images/" + fileName;
+    }
+}
+

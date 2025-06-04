@@ -55,5 +55,149 @@ namespace AntiqueShopMVC.Controllers
 
             return View(await itemsQuery.ToListAsync());
         }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToCartAsync(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var existing = await _context.Carts.FirstOrDefaultAsync(c =>
+                c.IdUser == userId && c.IdItem == id && c.IsActive == true);
+
+            if (existing != null)
+            {
+                existing.Quantity += 1;
+            }
+            else
+            {
+                _context.Carts.Add(new Cart
+                {
+                    IdUser = userId.Value,
+                    IdItem = id,
+                    Quantity = 1,
+                    AddedDate = DateOnly.FromDateTime(DateTime.Now),
+                    IsActive = true
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Товар добавлен в корзину.";
+            return RedirectToAction("Index");
+            
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddToFavoriteAsync(int id)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var exists = await _context.Favorites.FirstOrDefaultAsync(f => f.IdUser == userId && f.IdItem == id);
+            if (exists == null)
+            {
+                _context.Favorites.Add(new Favorite
+                {
+                    IdUser = userId.Value,
+                    IdItem = id
+                });
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Товар добавлен в избранное.";
+            }
+            
+            else
+            {
+                TempData["Info"] = "Товар уже в избранном";
+            }
+
+            return RedirectToAction("Index");
+
+        }
+        public async Task<IActionResult> Details(int id)
+        {
+            var item = await _context.Items
+                .Include(i => i.IdCategoryNavigation)
+                .Include(i => i.IdMaterialNavigation)
+                .Include(i => i.IdSupplierNavigation)
+                .Include(i => i.IdStatusNavigation)
+                .Include(i => i.IdOriginCountryNavigation)
+                .FirstOrDefaultAsync(i => i.IdItem == id);
+
+            if (item == null)
+                return NotFound();
+
+            return View(item);
+        }
+        
+        public async Task<IActionResult> UserInfo()
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            return View(user);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UserInfo(User model, string oldPassword, string newPassword, string confirmPassword)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (userId == null)
+                return RedirectToAction("Login", "Account");
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                return View(user);
+            }
+
+            // Проверка пароля, если пользователь пытается его изменить
+            if (!string.IsNullOrEmpty(newPassword))
+            {
+                if (oldPassword != user.Password)
+                {
+                    ModelState.AddModelError("", "Неверный старый пароль");
+                    return View(user);
+                }
+
+                if (newPassword != confirmPassword)
+                {
+                    ModelState.AddModelError("", "Новый пароль и подтверждение не совпадают");
+                    return View(user);
+                }
+
+                user.Password = newPassword;
+            }
+
+            // Обновляем остальные данные
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.MiddleName = model.MiddleName;
+            user.Email = model.Email;
+            user.Preferences = model.Preferences;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Данные успешно сохранены";
+                return RedirectToAction("UserInfo");
+            }
+            catch (DbUpdateException ex)
+            {
+                ModelState.AddModelError("", $"Ошибка при сохранении: {ex.Message}");
+                return View(user);
+            }
+        }
     }
 }

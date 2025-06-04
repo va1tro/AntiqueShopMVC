@@ -1,0 +1,230 @@
+﻿@model List<AntiqueShopMVC.Models.ItemLog>
+@{
+    ViewBag.Title = "Журнал изменений товара";
+    Layout = null;
+}
+
+@functions {
+    public string FormatDate(DateTime? date)
+    {
+        return date?.ToString("dd.MM.yyyy HH:mm") ?? string.Empty;
+    }
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert success">@TempData["Success"]</div>
+}
+@if (TempData["Info"] != null)
+{
+    <div class="alert info">@TempData["Info"]</div>
+}
+
+<style>
+    @@keyframes fadeOut {
+        0% {
+            opacity: 1;
+        }
+
+        80% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0;
+            display: none;
+        }
+    }
+
+    .alert {
+        max-width: 800px;
+        margin: 10px auto;
+        padding: 12px 20px;
+        border-radius: 8px;
+        font-weight: bold;
+        text-align: center;
+        animation: fadeOut 3s forwards;
+    }
+
+        .alert.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert.info {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+    body {
+        background-color: #EEE0CB;
+        font-family: Arial, sans-serif;
+    }
+
+    .logs-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        background: white;
+        border: 1px solid #A58B5F;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .logs-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #D9C7A7;
+    }
+
+    .logs-title {
+        color: #8B5E3C;
+        font-size: 24px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .back-button {
+        background-color: #F5DEB3;
+        color: #8B5E3C;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .filters-container {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .filter-label {
+        color: #8B5E3C;
+        font-weight: bold;
+    }
+
+    .filter-input {
+        padding: 8px 12px;
+        border: 1px solid #8B5E3C;
+        border-radius: 8px;
+        font-size: 14px;
+    }
+
+    .filter-button {
+        background-color: #F5DEB3;
+        color: #8B5E3C;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .logs-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+
+        .logs-table th {
+            background-color: #D9C7A7;
+            color: #5E3C1E;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .logs-table td {
+            padding: 10px 15px;
+            border-bottom: 1px solid #EEE0CB;
+        }
+
+        .logs-table tr:nth-child(even) {
+            background-color: #FFF8F0;
+        }
+
+        .logs-table tr:hover {
+            background-color: #FCEBD7;
+        }
+
+    .no-logs {
+        text-align: center;
+        padding: 20px;
+        color: #8B5E3C;
+        font-style: italic;
+    }
+</style>
+
+<div class="logs-container">
+    <div class="logs-header">
+        <h1 class="logs-title">Журнал изменений товара: @ViewBag.ItemName</h1>
+        <a href="/Admin/Index" class="back-button">← Назад</a>
+    </div>
+
+    <form method="get" asp-action="ItemLogs" asp-route-id="@ViewBag.ItemId">
+        <div class="filters-container">
+            <div class="filter-group">
+                <label class="filter-label">Поле:</label>
+                <input type="text" name="fieldFilter" value="@Context.Request.Query["fieldFilter"]" class="filter-input" placeholder="Название поля" />
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">Дата с:</label>
+                <input type="date" name="startDate" value="@Context.Request.Query["startDate"]" class="filter-input" />
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label">по:</label>
+                <input type="date" name="endDate" value="@Context.Request.Query["endDate"]" class="filter-input" />
+            </div>
+
+            <button type="submit" class="filter-button">Фильтровать</button>
+        </div>
+    </form>
+
+    @if (Model.Count == 0)
+    {
+        <div class="no-logs">Нет записей в журнале изменений</div>
+    }
+    else
+    {
+        <table class="logs-table">
+            <thead>
+                <tr>
+                    <th>Товар</th>
+                    <th>Поле</th>
+                    <th>Старое значение</th>
+                    <th>Новое значение</th>
+                    <th>Дата изменения</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td>@log.IdItemNavigation?.NameItem</td>
+                        <td>@log.ChangedField</td>
+                        <td>@log.OldValue</td>
+                        <td>@log.NewValue</td>
+                        <td>@FormatDate(log.ChangeDate)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

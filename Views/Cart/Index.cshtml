@@ -1,0 +1,108 @@
+﻿@model List<AntiqueShopMVC.Models.Cart>
+@{
+    ViewBag.Title = "Корзина";
+    Layout = null;
+    decimal total = (decimal)(ViewBag.Total ?? 0);
+}
+
+<style>
+    body {
+        background: #EEE0CB;
+        font-family: Arial;
+    }
+
+    .cart-container {
+        max-width: 800px;
+        margin: 50px auto;
+        background: white;
+        padding: 30px;
+        border-radius: 20px;
+        border: 2px solid #8B5E3C;
+    }
+
+    .cart-item {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        padding: 15px;
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+
+    .cart-item img {
+        height: 100px;
+        width: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    .cart-item .info {
+        flex-grow: 1;
+    }
+
+    .cart-item form {
+        display: inline-block;
+        margin-right: 10px;
+    }
+
+    .total {
+        font-size: 18px;
+        font-weight: bold;
+        color: #8B5E3C;
+        margin: 15px 0;
+    }
+
+    .confirm {
+        background: #8B5E3C;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+    }
+</style>
+
+<div class="cart-container">
+    <h2>Корзина</h2>
+
+    @if (TempData["Message"] != null)
+    {
+        <div style="color: green;">@TempData["Message"]</div>
+    }
+
+    @if (!Model.Any())
+    {
+        <p>Корзина пуста.</p>
+    }
+    else
+    {
+        foreach (var cart in Model)
+        {
+            <div class="cart-item">
+                <img src="@("/images/" + (cart.IdItemNavigation.Image ?? "picture.jpg"))" alt="Фото" />
+                <div class="info">
+                    <div><b>@cart.IdItemNavigation.NameItem</b></div>
+                    <div>Цена: @cart.IdItemNavigation.SellingPrice руб.</div>
+                    <form asp-action="UpdateQuantity" method="post">
+                        <input type="hidden" name="id" value="@cart.IdCart" />
+                        Кол-во: <input type="number" name="quantity" value="@cart.Quantity" min="1" style="width:50px;" />
+                        <button>Обновить</button>
+                    </form>
+                    <form asp-action="Remove" method="post">
+                        <input type="hidden" name="id" value="@cart.IdCart" />
+                        <button>Удалить</button>
+                    </form>
+                </div>
+            </div>
+        }
+
+        <div class="total">Итого: @total руб.</div>
+
+        <form asp-action="ConfirmOrder" method="post">
+            <button class="confirm">Оформить заказ</button>
+        </form>
+    }
+
+    <br />
+    <a href="/User/Index">← Назад к товарам</a>
+</div>
