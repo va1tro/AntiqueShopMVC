@@ -1,0 +1,146 @@
+﻿@model List<AntiqueShopMVC.Models.Item>
+@{
+    ViewBag.Title = "Товары";
+    Layout = null; // Или _Layout, если используется
+    var categories = ViewBag.Categories as List<string> ?? new List<string>();
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+    string currentCategory = ViewBag.CurrentCategory as string ?? "Все";
+    string currentSort = ViewBag.CurrentSort as string ?? "";
+}
+
+<style>
+    body {
+        background-color: #FFE8DCCA;
+        font-family: Arial;
+    }
+
+    .menu {
+        background: #D9C7A7;
+        padding: 10px;
+        border-bottom: 1px solid #8B5E3C;
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+
+        .menu a {
+            padding: 8px 16px;
+            border: 1px solid #8B5E3C;
+            border-radius: 8px;
+            background: white;
+            color: #8B5E3C;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+    .filters {
+        background: #D9C7A7;
+        padding: 10px;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+    }
+
+    .items {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        padding: 20px;
+        justify-content: center;
+    }
+
+    .card {
+        background: white;
+        border: 1px solid #A58B5F;
+        border-radius: 8px;
+        padding: 10px;
+        width: 280px;
+        box-shadow: 1px 1px 5px rgba(0,0,0,0.1);
+    }
+
+        .card img {
+            max-height: 150px;
+            object-fit: contain;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .card .name {
+            font-weight: bold;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .card .info {
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .card .price {
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .card .actions {
+            text-align: center;
+        }
+
+            .card .actions button {
+                margin: 0 5px;
+            }
+</style>
+
+<div class="menu">
+    <a href="#">🛒 Корзина</a>
+    <a href="#">⭐ Избранное</a>
+    <a href="#">📦 Заказы</a>
+    <a href="#">⛔ Выход</a>
+</div>
+
+<form method="get" class="filters">
+    <select name="category">
+        <option>Все</option>
+        @foreach (var c in categories)
+        {
+            <option value="@c" selected="@(c == currentCategory ? "selected" : null)">@c</option>
+        }
+    </select>
+
+    <select name="sort">
+        <option value="">Без сортировки</option>
+        <option value="year_asc" selected="@(currentSort == "year_asc" ? "selected" : null)">Год ↑</option>
+        <option value="year_desc" selected="@(currentSort == "year_desc" ? "selected" : null)">Год ↓</option>
+        <option value="price_asc" selected="@(currentSort == "price_asc" ? "selected" : null)">Цена ↑</option>
+        <option value="price_desc" selected="@(currentSort == "price_desc" ? "selected" : null)">Цена ↓</option>
+        <option value="arrival_new" selected="@(currentSort == "arrival_new" ? "selected" : null)">Новые</option>
+        <option value="arrival_old" selected="@(currentSort == "arrival_old" ? "selected" : null)">Старые</option>
+    </select>
+
+    <input type="text" name="search" placeholder="Поиск..." value="@currentSearch" />
+    <button type="submit">Найти</button>
+</form>
+
+<div class="items">
+    @if (Model.Count == 0)
+    {
+        <p>Товары не найдены</p>
+    }
+    else
+    {
+        foreach (var item in Model)
+        {
+            <div class="card">
+                <img src="@("/images/" + (item.Image ?? "picture.jpg"))" alt="img" />
+                <div class="name">@item.NameItem</div>
+                <div class="info">Год: @item.Year</div>
+                <div class="info">Состояние: @item.Condition</div>
+                <div class="info">Подлинность: @item.Authenticity</div>
+                <div class="price">Цена: @item.SellingPrice руб.</div>
+                <div class="actions">
+                    <button>🛒</button>
+                    <button>⭐</button>
+                </div>
+            </div>
+        }
+    }
+</div>

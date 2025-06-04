@@ -1,0 +1,76 @@
+﻿@model AntiqueShopMVC.Models.User
+@{
+    ViewBag.Title = "Регистрация";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Регистрация</title>
+    <style>
+        body {
+            background-color: #EEE0CB;
+            font-family: Arial;
+        }
+
+        .register-box {
+            width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid #8B5E3C;
+        }
+
+            .register-box input {
+                width: 100%;
+                padding: 10px;
+                margin-top: 10px;
+                border: 1px solid #ccc;
+            }
+
+            .register-box button {
+                margin-top: 20px;
+                padding: 10px 20px;
+                background: #8B5E3C;
+                color: white;
+                border: none;
+                border-radius: 10px;
+            }
+
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 10px;
+            color: #8B5E3C;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-box">
+        <h2>Регистрация</h2>
+
+        <form method="post">
+            <input name="Login" value="@Model?.Login" placeholder="Логин" required />
+            <input name="Password" type="password" placeholder="Пароль" required />
+            <input name="confirmPassword" type="password" placeholder="Подтверждение пароля" required />
+            <input name="FirstName" value="@Model?.FirstName" placeholder="Имя" />
+            <input name="LastName" value="@Model?.LastName" placeholder="Фамилия" />
+            <input name="MiddleName" value="@Model?.MiddleName" placeholder="Отчество" />
+            <input name="Email" value="@Model?.Email" placeholder="Email" />
+            <input name="Preferences" value="@Model?.Preferences" placeholder="Предпочтения" />
+
+            <button type="submit">Зарегистрироваться</button>
+
+            <div class="error">@ViewBag.Error</div>
+            <a href="/Account/Login">Назад</a>
+        </form>
+    </div>
+</body>
+</html>
