@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
+using System.Text;
 
 namespace AntiqueShopMVC.Controllers
 {
@@ -47,12 +48,6 @@ namespace AntiqueShopMVC.Controllers
                 _ => itemsQuery
             };
 
-            // Экспорт в Excel
-            if (export)
-            {
-                return await ExportToExcel(itemsQuery);
-            }
-
             ViewBag.Categories = await _context.Categories.ToListAsync();
             ViewBag.CurrentCategory = category?.ToString();
             ViewBag.CurrentSearch = search;
@@ -91,51 +86,44 @@ namespace AntiqueShopMVC.Controllers
             return RedirectToAction("Index");
         }
 
-        private async Task<IActionResult> ExportToExcel(IQueryable<Item> itemsQuery)
+        public async Task<IActionResult> ExportToCsv(string search, int? category, string sort)
         {
+            var itemsQuery = _context.Items
+                .Include(i => i.IdCategoryNavigation)
+                .AsQueryable();
+
+            // Фильтрация
+            if (category.HasValue && category.Value > 0)
+                itemsQuery = itemsQuery.Where(i => i.IdCategory == category.Value);
+
+            if (!string.IsNullOrWhiteSpace(search))
+                itemsQuery = itemsQuery.Where(i => i.NameItem.Contains(search));
+
+            itemsQuery = sort switch
+            {
+                "year_asc" => itemsQuery.OrderBy(i => i.Year),
+                "year_desc" => itemsQuery.OrderByDescending(i => i.Year),
+                "price_asc" => itemsQuery.OrderBy(i => i.PurchasePrice),
+                "price_desc" => itemsQuery.OrderByDescending(i => i.PurchasePrice),
+                "arrival_new" => itemsQuery.OrderByDescending(i => i.ArrivalDate),
+                "arrival_old" => itemsQuery.OrderBy(i => i.ArrivalDate),
+                _ => itemsQuery
+            };
+
             var items = await itemsQuery.ToListAsync();
 
-            using (var package = new ExcelPackage())
+            var sb = new StringBuilder();
+            sb.AppendLine("Название;Год;Состояние;Подлинность;Цена покупки;Цена продажи;Дата поступления");
+
+            foreach (var item in items)
             {
-                var worksheet = package.Workbook.Worksheets.Add("Товары");
-
-                // Заголовки
-                worksheet.Cells[1, 1].Value = "Название";
-                worksheet.Cells[1, 2].Value = "Год";
-                worksheet.Cells[1, 3].Value = "Состояние";
-                worksheet.Cells[1, 4].Value = "Подлинность";
-                worksheet.Cells[1, 5].Value = "Цена покупки";
-                worksheet.Cells[1, 6].Value = "Цена продажи";
-                worksheet.Cells[1, 7].Value = "Дата поступления";
-
-                // Данные
-                for (int i = 0; i < items.Count; i++)
-                {
-                    worksheet.Cells[i + 2, 1].Value = items[i].NameItem;
-                    worksheet.Cells[i + 2, 2].Value = items[i].Year;
-                    worksheet.Cells[i + 2, 3].Value = items[i].Condition;
-                    worksheet.Cells[i + 2, 4].Value = items[i].Authenticity;
-                    worksheet.Cells[i + 2, 5].Value = items[i].PurchasePrice;
-                    worksheet.Cells[i + 2, 6].Value = items[i].SellingPrice;
-                    worksheet.Cells[i + 2, 7].Value = items[i].ArrivalDate?.ToString("d");
-                }
-
-                // Форматирование
-                worksheet.Cells.AutoFitColumns();
-                using (var range = worksheet.Cells[1, 1, 1, 7])
-                {
-                    range.Style.Font.Bold = true;
-                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
-                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
-                }
-
-                var stream = new MemoryStream();
-                package.SaveAs(stream);
-                stream.Position = 0;
-
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Список_товаров.xlsx");
+                sb.AppendLine($"{item.NameItem};{item.Year};{item.Condition};{item.Authenticity};{item.PurchasePrice};{item.SellingPrice};{item.ArrivalDate?.ToString("dd.MM.yyyy")}");
             }
+
+            var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            return File(bytes, "text/csv", "Список_товаров.csv");
         }
+
         public async Task<IActionResult> Details(int id)
         {
             var item = await _context.Items
@@ -273,18 +261,32 @@ namespace AntiqueShopMVC.Controllers
             if (model.IdItem == 0)
             {
                 // Добавление нового товара
-                item = new Item();
+                item = model;
                 _context.Items.Add(item);
             }
             else
             {
                 // Редактирование существующего
-                item = await _context.Items.FindAsync(model.IdItem);
+                item = await _context.Items.FirstOrDefaultAsync(i => i.IdItem == model.IdItem);
                 if (item == null) return NotFound();
 
-                // Логирование изменений
                 await LogChanges(item, model);
+
+                // Явно обновляем поля
+                item.NameItem = model.NameItem;
+                item.Year = model.Year;
+                item.ArrivalDate = model.ArrivalDate;
+                item.Condition = model.Condition;
+                item.Authenticity = model.Authenticity;
+                item.PurchasePrice = model.PurchasePrice;
+                item.SellingPrice = model.SellingPrice;
+                item.IdCategory = model.IdCategory;
+                item.IdMaterial = model.IdMaterial;
+                item.IdSupplier = model.IdSupplier;
+                item.IdStatus = model.IdStatus;
+                item.IdOriginCountry = model.IdOriginCountry;
             }
+
 
             // Обновляем поля
             item.NameItem = model.NameItem;

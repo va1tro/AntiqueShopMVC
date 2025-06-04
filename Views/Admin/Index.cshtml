@@ -1,4 +1,16 @@
-﻿@functions {
+﻿@using AntiqueShopMVC.Models
+@model List<Item>
+
+@{
+    ViewBag.Title = "Административная панель";
+    Layout = null; // Или _Layout, если используется
+    var categories = ViewBag.Categories as List<Category> ?? new List<Category>();
+    string currentSearch = ViewBag.CurrentSearch as string ?? "";
+    string currentCategory = ViewBag.CurrentCategory as string ?? "";
+    string currentSort = ViewBag.CurrentSort as string ?? "";
+}
+
+@functions {
     public string GetImagePath(string fileName)
     {
         return string.IsNullOrWhiteSpace(fileName)
@@ -6,23 +18,8 @@
             : $"/images/{fileName}";
     }
 }
-@model List<AntiqueShopMVC.Models.Item>
-@{
-    ViewBag.Title = "Административная панель";
-    Layout = null;
-    var categories = ViewBag.Categories as List<string> ?? new List<string>();
-    string currentSearch = ViewBag.CurrentSearch as string ?? "";
-    string currentCategory = ViewBag.CurrentCategory as string ?? "Все";
-    string currentSort = ViewBag.CurrentSort as string ?? "";
-}
-@if (TempData["Success"] != null)
-{
-    <div class="alert success">@TempData["Success"]</div>
-}
-@if (TempData["Info"] != null)
-{
-    <div class="alert info">@TempData["Info"]</div>
-}
+
+<!-- Уведомления -->
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert success">@TempData["SuccessMessage"]</div>
@@ -237,18 +234,22 @@
     }
 </style>
 
+<!-- Верхнее меню -->
 <div class="menu">
     <a href="/Admin/ItemLogs">📝 Все журналы</a>
     <a href="/Admin/UserInfo">👤 Личные данные</a>
     <a href="/Account/Logout">⛔ Выход</a>
 </div>
 
+<!-- Фильтры -->
 <form id="filterForm" method="get" class="filters">
     <select name="category" onchange="submitForm()">
-        <option>Все</option>
+        <option value="">Все категории</option>
         @foreach (var c in categories)
         {
-            <option value="@c" selected="@(c == currentCategory ? "selected" : null)">@c</option>
+            <option value="@c.IdCategory" selected="@(c.IdCategory.ToString() == currentCategory ? "selected" : null)">
+                @c.NameCategory
+            </option>
         }
     </select>
 
@@ -263,7 +264,8 @@
     </select>
 
     <input type="text" name="search" placeholder="Поиск..." value="@currentSearch" oninput="delayedSubmit()" />
-    <button type="button" onclick="location.href='/Admin/AddEditItem'" style="text-decoration: none;">Добавить товар</button>
+
+    <button type="button" onclick="location.href='/Admin/AddEditItem'">Добавить товар</button>
     <button type="button" onclick="exportToExcel()">Экспорт в Excel</button>
 </form>
 
@@ -271,30 +273,28 @@
     Найдено товаров: @Model.Count
 </div>
 
+<!-- Карточки товаров -->
 <div class="items">
-    @if (Model.Count == 0)
+    @foreach (var item in Model)
     {
-        <p>Товары не найдены</p>
-    }
-    else
-    {
-        @foreach (var item in Model)
-        {
-            <div class="card">
-                <div class="admin-actions">
-                    <button onclick="event.stopPropagation(); location.href='@Url.Action("AddEditItem", "Admin", new { id = item.IdItem })'">✏️</button>
-                    <button onclick="event.stopPropagation(); deleteItem(@item.IdItem)">🗑️</button>
-                    <button onclick="event.stopPropagation(); location.href='@Url.Action("ItemLogs", "Admin", new { id = item.IdItem })'">📝</button>
-                </div>
-
-                <img src="@GetImagePath(item.Image)" alt="Фото" onclick="location.href='@Url.Action("Details", "Admin", new { id = item.IdItem })'" />
-                <div class="name" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">@item.NameItem</div>
-                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Год: @item.Year</div>
-                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Состояние: @item.Condition</div>
-                <div class="info" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Подлинность: @item.Authenticity</div>
-                <div class="price" onclick="location.href='@Url.Action("Details", "User", new { id = item.IdItem })'">Цена: @item.SellingPrice руб.</div>
+        <div class="card">
+            <div class="admin-actions">
+                <form asp-action="DeleteItem" asp-controller="Admin" method="post" onsubmit="return confirm('Удалить товар?');">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@item.IdItem" />
+                    <button type="submit">🗑️</button>
+                </form>
+                <button onclick="location.href='@Url.Action("AddEditItem", "Admin", new { id = item.IdItem })'">✏️</button>
+                <button onclick="location.href='@Url.Action("ItemLogs", "Admin", new { id = item.IdItem })'">📝</button>
             </div>
-        }
+
+            <img src="@GetImagePath(item.Image)" alt="Фото" onclick="location.href='@Url.Action("Details", "Admin", new { id = item.IdItem })'" />
+            <div class="name">@item.NameItem</div>
+            <div class="info">Год: @item.Year</div>
+            <div class="info">Состояние: @item.Condition</div>
+            <div class="info">Подлинность: @item.Authenticity</div>
+            <div class="price">Цена: @item.SellingPrice руб.</div>
+        </div>
     }
 </div>
 
@@ -311,33 +311,17 @@
                 submitForm();
             }, 600);
         }
-        // Функция удаления
-        function deleteItem(id) {
-            if (confirm('Вы уверены, что хотите удалить этот товар?')) {
-                fetch(`/Admin/DeleteItem/${id}`, {
-                    method: 'POST',
-                    headers: {
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value,
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => {
-                    if (response.ok) {
-                        location.reload();
-                    } else {
-                        alert('Ошибка при удалении товара');
-                    }
-                }).catch(error => {
-                    console.error('Error:', error);
-                    alert('Ошибка при удалении товара');
-                });
-            }
+
+        function exportToExcel() {
+        const form = document.getElementById("filterForm");
+        const url = new URL('/Admin/ExportToCsv', window.location.origin);
+
+        for (const el of form.elements) {
+            if (el.name && el.value)
+                url.searchParams.set(el.name, el.value);
         }
 
-        // Функция экспорта
-        function exportToExcel() {
-            const params = new URLSearchParams(window.location.search);
-            params.append('export', 'true');
-            window.location.href = `${window.location.pathname}?${params.toString()}`;
-        }
+        window.location.href = url.toString(); // Перейти по URL для скачивания
+    }
     </script>
 }
