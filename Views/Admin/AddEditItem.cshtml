@@ -13,17 +13,19 @@
     }
 }
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert success">@TempData["Success"]</div>
-}
-@if (TempData["Info"] != null)
-{
-    <div class="alert info">@TempData["Info"]</div>
-}
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert success">@TempData["SuccessMessage"]</div>
+}
+
+@if (ViewData.ModelState.ContainsKey("") && ViewData.ModelState[""].Errors.Any())
+{
+    <div class="alert error">
+        @foreach (var error in ViewData.ModelState[""].Errors)
+        {
+            <p>@error.ErrorMessage</p>
+        }
+    </div>
 }
 
 <style>
@@ -49,7 +51,7 @@
         border-radius: 8px;
         font-weight: bold;
         text-align: center;
-        animation: fadeOut 3s forwards;
+        animation: fadeOut 5s forwards;
     }
 
         .alert.success {
@@ -58,10 +60,10 @@
             border: 1px solid #c3e6cb;
         }
 
-        .alert.info {
-            background-color: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeeba;
+        .alert.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
         }
 
     body {
@@ -144,6 +146,8 @@
     .text-danger {
         color: #dc3545;
         font-size: 14px;
+        display: block;
+        margin-top: 5px;
     }
 
     .form-row {
@@ -183,106 +187,121 @@
 <div class="item-form-container">
     <h2 class="item-form-title">@ViewBag.Title</h2>
 
-    <form asp-action="AddEditItem" method="post" enctype="multipart/form-data">
+    <form asp-action="AddEditItem" method="post" enctype="multipart/form-data" lang="en">
+        @Html.AntiForgeryToken()
         <input type="hidden" asp-for="IdItem" />
 
         <div class="form-group">
-            <label class="form-label">Название товара</label>
-            <input asp-for="NameItem" class="form-control" placeholder="Введите название товара" />
+            <label class="form-label" for="NameItem">Название товара</label>
+            <input asp-for="NameItem" class="form-control" placeholder="Введите название товара" required />
             <span asp-validation-for="NameItem" class="text-danger"></span>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Год выпуска</label>
-                <input asp-for="Year" class="form-control" placeholder="Введите год выпуска" />
+                <label class="form-label" for="Year">Год выпуска</label>
+                <input asp-for="Year" class="form-control" type="number" placeholder="Введите год выпуска" required />
+                <span asp-validation-for="Year" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Дата поступления</label>
-                <input asp-for="ArrivalDate" type="date" class="form-control" />
+                <label class="form-label" for="ArrivalDate">Дата поступления</label>
+                @{
+                    var arrivalDateValue = Model.ArrivalDate.HasValue ? Model.ArrivalDate.Value.ToDateTime(TimeOnly.MinValue).ToString("yyyy-MM-dd") : "";
+                }
+                <input asp-for="ArrivalDate" class="form-control" type="date" value="@arrivalDateValue" required />
+                <span asp-validation-for="ArrivalDate" class="text-danger"></span>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Состояние</label>
+                <label class="form-label" for="Condition">Состояние</label>
                 <input asp-for="Condition" class="form-control" placeholder="Опишите состояние" />
+                <span asp-validation-for="Condition" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Подлинность</label>
+                <label class="form-label" for="Authenticity">Подлинность</label>
                 <input asp-for="Authenticity" class="form-control" placeholder="Укажите подлинность" />
+                <span asp-validation-for="Authenticity" class="text-danger"></span>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Цена покупки</label>
-                <input asp-for="PurchasePrice" class="form-control" placeholder="Введите цену покупки" />
+                <label class="form-label" for="PurchasePrice">Цена покупки</label>
+                <input asp-for="PurchasePrice" class="form-control" type="number" step="0.01" placeholder="Введите цену покупки" required />
+                <span asp-validation-for="PurchasePrice" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Цена продажи</label>
-                <input asp-for="SellingPrice" class="form-control" placeholder="Введите цену продажи" />
+                <label class="form-label" for="SellingPrice">Цена продажи</label>
+                <input asp-for="SellingPrice" class="form-control" type="number" step="0.01" placeholder="Введите цену продажи" required />
+                <span asp-validation-for="SellingPrice" class="text-danger"></span>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Изображение</label>
-            <input type="file" name="imageFile" class="form-control" />
+            <label class="form-label" for="imageFile">Изображение</label>
+            <input type="file" name="imageFile" class="form-control" accept="image/*" />
             @if (!string.IsNullOrEmpty(Model.Image))
             {
                 <img src="@GetImagePath(Model.Image)" class="image-preview" alt="Текущее изображение" />
                 <input type="hidden" asp-for="Image" />
             }
+            <span class="text-danger" asp-validation-for="Image"></span>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Категория</label>
-                <select asp-for="IdCategory" asp-items="ViewBag.Categories" class="select-dropdown">
+                <label class="form-label" for="IdCategory">Категория</label>
+                <select asp-for="IdCategory" asp-items="ViewBag.Categories" class="select-dropdown" required>
                     <option value="">-- Выберите категорию --</option>
                 </select>
                 <span asp-validation-for="IdCategory" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Материал</label>
+                <label class="form-label" for="IdMaterial">Материал</label>
                 <select asp-for="IdMaterial" asp-items="ViewBag.Materials" class="select-dropdown">
                     <option value="">-- Выберите материал --</option>
                 </select>
+                <span asp-validation-for="IdMaterial" class="text-danger"></span>
             </div>
         </div>
 
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Поставщик</label>
+                <label class="form-label" for="IdSupplier">Поставщик</label>
                 <select asp-for="IdSupplier" asp-items="ViewBag.Suppliers" class="select-dropdown">
                     <option value="">-- Выберите поставщика --</option>
                 </select>
+                <span asp-validation-for="IdSupplier" class="text-danger"></span>
             </div>
 
             <div class="form-group">
-                <label class="form-label">Статус</label>
+                <label class="form-label" for="IdStatus">Статус</label>
                 <select asp-for="IdStatus" asp-items="ViewBag.Statuses" class="select-dropdown">
                     <option value="">-- Выберите статус --</option>
                 </select>
+                <span asp-validation-for="IdStatus" class="text-danger"></span>
             </div>
         </div>
 
         <div class="form-group">
-            <label class="form-label">Страна происхождения</label>
+            <label class="form-label" for="IdOriginCountry">Страна происхождения</label>
             <select asp-for="IdOriginCountry" asp-items="ViewBag.OriginCountries" class="select-dropdown">
                 <option value="">-- Выберите страну --</option>
             </select>
+            <span asp-validation-for="IdOriginCountry" class="text-danger"></span>
         </div>
 
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="submit" class="btn btn-primary">Сохранить</button>
-            <a href="/Admin/Index" class="btn btn-secondary">Отмена</a>
+            <a asp-action="Index" asp-controller="Admin" class="btn btn-secondary">Отмена</a>
         </div>
-    </form> 
+    </form>
 </div>
 
 @section Scripts {
@@ -294,18 +313,24 @@
         // JavaScript для placeholder-эффекта
         document.querySelectorAll('.form-control').forEach(input => {
             const placeholder = input.getAttribute('placeholder');
+            if (!placeholder) return;
 
             input.addEventListener('focus', () => {
-                if (input.value === '' && placeholder) {
+                if (input.value === '') {
                     input.setAttribute('placeholder', '');
                 }
             });
 
             input.addEventListener('blur', () => {
-                if (input.value === '' && placeholder) {
+                if (input.value === '') {
                     input.setAttribute('placeholder', placeholder);
                 }
             });
+        });
+
+        // Отладка отправки формы
+        document.querySelector('form').addEventListener('submit', (e) => {
+            console.log('Form submitted');
         });
     </script>
 }
